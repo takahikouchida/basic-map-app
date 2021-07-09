@@ -1,9 +1,9 @@
 import './Dashboard.css';
-
 import 'ol/ol.css';
 import 'ol-layerswitcher/dist/ol-layerswitcher.css';
+import {useWindowSize} from 'react-use';
 
-import React, {useState, useEffect} from 'react'
+import React, {useState, useRef , useEffect} from 'react'
 import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -23,6 +23,7 @@ import Link from '@material-ui/core/Link';
 import MenuIcon from '@material-ui/icons/Menu';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import NotificationsIcon from '@material-ui/icons/Notifications';
+import SettingsIcon from '@material-ui/icons/Settings';
 import { mainListItems, secondaryListItems } from './listItems';
 import Chart from './Chart';
 import Deposits from './Deposits';
@@ -36,25 +37,11 @@ import LayerGroup from 'ol/layer/Group';
 import {Attribution, defaults as defaultControls} from 'ol/control';
 import {fromLonLat,toLonLat} from 'ol/proj';
 
-
+import MapSearchTextField from './MapSearchTextField';
 
 
 import LayerSwitcher from 'ol-layerswitcher';
 
-
-
-function Copyright() {
-    return (
-        <Typography variant="body2" color="textSecondary" align="center">
-            {'Copyright © '}
-            <Link color="inherit" href="https://material-ui.com/">
-                Your Website
-            </Link>{' '}
-            {new Date().getFullYear()}
-            {'.'}
-        </Typography>
-    );
-}
 
 const drawerWidth = 240;
 
@@ -73,19 +60,20 @@ const useStyles = makeStyles((theme) => ({
         ...theme.mixins.toolbar,
     },
     appBar: {
+        background: '#369',
         zIndex: theme.zIndex.drawer + 1,
-        transition: theme.transitions.create(['width', 'margin'], {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.leavingScreen,
-        }),
+        // transition: theme.transitions.create(['width', 'margin'], {
+        //     easing: theme.transitions.easing.sharp,
+        //     duration: theme.transitions.duration.leavingScreen,
+        // }),
     },
     appBarShift: {
         marginLeft: drawerWidth,
         width: `calc(100% - ${drawerWidth}px)`,
-        transition: theme.transitions.create(['width', 'margin'], {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.enteringScreen,
-        }),
+        // transition: theme.transitions.create(['width', 'margin'], {
+        //     easing: theme.transitions.easing.sharp,
+        //     duration: theme.transitions.duration.enteringScreen,
+        // }),
     },
     menuButton: {
         marginRight: 36,
@@ -100,17 +88,17 @@ const useStyles = makeStyles((theme) => ({
         position: 'relative',
         whiteSpace: 'nowrap',
         width: drawerWidth,
-        transition: theme.transitions.create('width', {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.enteringScreen,
-        }),
+        // transition: theme.transitions.create('width', {
+        //     easing: theme.transitions.easing.sharp,
+        //     duration: theme.transitions.duration.enteringScreen,
+        // }),
     },
     drawerPaperClose: {
         overflowX: 'hidden',
-        transition: theme.transitions.create('width', {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.leavingScreen,
-        }),
+        // transition: theme.transitions.create('width', {
+        //     easing: theme.transitions.easing.sharp,
+        //     duration: theme.transitions.duration.leavingScreen,
+        // }),
         width: theme.spacing(7),
         [theme.breakpoints.up('sm')]: {
             width: theme.spacing(9),
@@ -120,7 +108,7 @@ const useStyles = makeStyles((theme) => ({
     content: {
         flexGrow: 1,
         height: '100vh',
-        overflow: 'auto',
+        overflow: 'none',
     },
     container: {
         paddingTop: theme.spacing(4),
@@ -137,22 +125,46 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-export default function Dashboard() {
+export default function Dashboard({map,setMap}) {
+    const { width, height } = useWindowSize();
+    const _AppBarElm = useRef(null);
+    const _MapContainerElm = useRef(null);
+    const _MainElm = useRef(null);
+
     const classes = useStyles();
-    const [open, setOpen] = React.useState(true);
+    const [open, setOpen] = React.useState(false);
     const handleDrawerOpen = () => {
         setOpen(true);
+        console.log(_MapContainerElm.current.style.width);
+        _MapContainerElm.current.style.width = _MainElm.current.clientWidth + "px";
+        map.updateSize();
+        console.log(_MapContainerElm.current.style.width);
     };
     const handleDrawerClose = () => {
         setOpen(false);
+        console.log(_MapContainerElm.current.style.width);
+        _MapContainerElm.current.style.width = _MainElm.current.clientWidth + "px";
+        map.updateSize();
+        console.log(_MapContainerElm.current.style.width);
     };
     const fixedHeightPaper = clsx(classes.paper, classes.fixedHeight);
 
     useEffect(() => {
+        // window resize
+        console.log("windows resize");
+    },[width, height]);
 
-        console.log('useEffect');
+    useEffect(() => {
+        // window resize
+        console.log("map resize");
+    },[_MapContainerElm]);
 
-        var _attribution = new Attribution({
+    useEffect(() =>{
+        console.log("_MainElm resize");
+    },[_MainElm]);
+
+    useEffect(() => {
+        const _attribution = new Attribution({
             collapsible: false,
         });
 
@@ -163,7 +175,7 @@ export default function Dashboard() {
                         title: 'Base maps',
                         layers: [
                             new TileLayer({
-                                title: 'CDSハイブリッド',
+                                title: 'GSI MAP',
                                 type: 'base',
                                 source: new XYZ({
                                     url: `https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png`,
@@ -184,6 +196,17 @@ export default function Dashboard() {
 
         })
 
+        // console.log(_AppBarElm.current.clientHeight);
+        // // _MapContainerElm
+        // console.log(_MapContainerElm.current.clientHeight);
+        // console.log(_MapContainerElm.current.style);
+        // console.log(height);
+
+        console.log(window.innerHeight - _AppBarElm.current.clientHeight + 'px');
+
+        _MapContainerElm.current.style.height = window.innerHeight - _AppBarElm.current.clientHeight + 'px';
+        _map.updateSize();
+        setMap(_map);
 
     },[]);
 
@@ -191,7 +214,7 @@ export default function Dashboard() {
     return (
         <div className={classes.root}>
             <CssBaseline />
-            <AppBar position="absolute" className={clsx(classes.appBar, open && classes.appBarShift)}>
+            <AppBar ref={_AppBarElm} position="absolute" className={clsx(classes.appBar, open && classes.appBarShift)}>
                 <Toolbar className={classes.toolbar}>
                     <IconButton
                         edge="start"
@@ -203,16 +226,18 @@ export default function Dashboard() {
                         <MenuIcon />
                     </IconButton>
                     <Typography component="h1" variant="h6" color="inherit" noWrap className={classes.title}>
-                        Dashboard
+                        BASIC MAP APP
                     </Typography>
+                    <MapSearchTextField />
                     <IconButton color="inherit">
                         <Badge badgeContent={4} color="secondary">
-                            <NotificationsIcon />
+                            <SettingsIcon />
                         </Badge>
                     </IconButton>
                 </Toolbar>
             </AppBar>
             <Drawer
+                transitionDuration={0}
                 variant="permanent"
                 classes={{
                     paper: clsx(classes.drawerPaper, !open && classes.drawerPaperClose),
@@ -229,9 +254,9 @@ export default function Dashboard() {
                 <Divider />
                 <List>{secondaryListItems}</List>
             </Drawer>
-            <main className={classes.content}>
+            <main ref={_MainElm} className={classes.content}>
                 <div className={classes.appBarSpacer} />
-                <div id="mapContainer"></div>
+                <div ref={_MapContainerElm} id="mapContainer"></div>
                 {/*<Container maxWidth="lg" className={classes.container}>*/}
                 {/*    <Grid container spacing={3}>*/}
                 {/*        /!* Chart *!/*/}
